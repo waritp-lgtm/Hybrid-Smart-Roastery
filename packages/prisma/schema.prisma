@@ -1,0 +1,430 @@
+// ============================================================
+// Eight Coffee Roasters — Prisma Schema
+// Database: PostgreSQL 16 + pgvector extension
+// ============================================================
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [pgvector(map: "vector")]
+}
+
+// ============================================================
+// ENUMS
+// ============================================================
+
+enum Role {
+  SUPER_ADMIN
+  MANAGER
+  ROASTER
+  CUSTOMER
+}
+
+enum CustomerTier {
+  RETAIL
+  WHOLESALE
+}
+
+enum RoastLevel {
+  LIGHT
+  MEDIUM_LIGHT
+  MEDIUM
+  MEDIUM_DARK
+  DARK
+}
+
+enum Process {
+  WASHED
+  NATURAL
+  HONEY
+  ANAEROBIC
+  EXPERIMENTAL
+}
+
+enum OrderStatus {
+  PENDING_PAYMENT
+  PAID
+  ROASTING
+  READY_TO_SHIP
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+enum RoastJobStatus {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  PROMPTPAY_QR
+  BANK_TRANSFER
+  CREDIT_CARD
+  COD
+}
+
+enum LogisticsProvider {
+  FLASH_EXPRESS
+  KERRY
+  EMS
+  JNT
+}
+
+// ============================================================
+// MODULE 1: USERS & AUTH (RBAC)
+// ============================================================
+
+model User {
+  id           String       @id @default(uuid())
+  email        String?      @unique
+  lineUserId   String?      @unique @map("line_user_id")
+  lineProfile  Json?        @map("line_profile") // { name, pictureUrl }
+  name         String
+  phone        String?
+  role         Role         @default(CUSTOMER)
+  tier         CustomerTier @default(RETAIL)
+  isActive     Boolean      @default(true) @map("is_active")
+  createdAt    DateTime     @default(now()) @map("created_at")
+  updatedAt    DateTime     @updatedAt @map("updated_at")
+
+  addresses    Address[]
+  orders       Order[]
+  reviews      Review[]
+  sessions     Session[]
+
+  @@map("users")
+}
+
+model Session {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  token     String   @unique
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model Address {
+  id         String  @id @default(uuid())
+  userId     String  @map("user_id")
+  label      String  @default("home") // home, office, etc.
+  fullName   String  @map("full_name")
+  phone      String
+  address    String
+  district   String
+  province   String
+  postalCode String  @map("postal_code")
+  isDefault  Boolean @default(false) @map("is_default")
+
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orders Order[]
+
+  @@map("addresses")
+}
+
+// ============================================================
+// MODULE 1: PRODUCTS & MEDIA
+// ============================================================
+
+model Product {
+  id          String     @id @default(uuid())
+  sku         String     @unique
+  slug        String     @unique
+  nameEn      String     @map("name_en")
+  nameTh      String     @map("name_th")
+  descEn      String?    @map("desc_en")
+  descTh      String?    @map("desc_th")
+  origin      String     // Ethiopia, Colombia, etc.
+  region      String?
+  process     Process    @default(WASHED)
+  roastLevel  RoastLevel @default(MEDIUM)
+  elevation   String?    // เช่น "1800-2200 masl"
+
+  // Flavor data (SCA Wheel structure)
+  flavorNotes Json @default("[]") @map("flavor_notes")
+  // Example: { "fruity": { "citrus": ["orange"], "berry": ["blueberry"] }, "floral": ["jasmine"] }
+
+  // Beginner scores (Radar Chart) — scale 1-5
+  flavorScores Json @default("{}") @map("flavor_scores")
+  // Example: { "sweet": 4, "sour": 2, "body": 5, "aroma": 4, "bitter": 1 }
+
+  // AI Embedding (Gemini text-embedding-004 = 768 dims)
+  embedding Unsupported("vector(768)")?
+
+  // Brew Guide
+  brewGuideEn Json? @map("brew_guide_en")
+  brewGuideTh Json? @map("brew_guide_th")
+  // Example: { method: "V60", ratio: "1:15", temp: "93°C", grind: "medium-fine", time: "2:30 min" }
+
+  // Pricing
+  retailPrice    Decimal @map("retail_price") @db.Decimal(10, 2)
+  wholesalePrice Decimal @map("wholesale_price") @db.Decimal(10, 2)
+  weightGram     Int     @map("weight_gram") @default(250) // กรัมต่อถุง
+
+  // QR Code packaging URL
+  qrCodeUrl String? @map("qr_code_url")
+
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  media             MediaFile[]
+  inventoryRoasted  InventoryRoasted[]
+  orderItems        OrderItem[]
+  reviews           Review[]
+
+  @@map("products")
+}
+
+model MediaFile {
+  id        String   @id @default(uuid())
+  productId String?  @map("product_id")
+  filename  String
+  mimeType  String   @map("mime_type")
+  sizeBytes Int      @map("size_bytes")
+  path      String   // path on NAS mount
+  url       String   // public URL
+  altEn     String?  @map("alt_en")
+  altTh     String?  @map("alt_th")
+  isPrimary Boolean  @default(false) @map("is_primary")
+  sortOrder Int      @default(0) @map("sort_order")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  product Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  @@map("media_files")
+}
+
+// ============================================================
+// MODULE 2: DUAL INVENTORY SYSTEM
+// ============================================================
+
+model InventoryGreen {
+  id             String   @id @default(uuid())
+  batchRef       String   @map("batch_ref") // เลข LOT / กระสอบ
+  origin         String
+  region         String?
+  process        Process  @default(WASHED)
+  moisturePercent Float   @map("moisture_percent")
+  weightKg       Float    @map("weight_kg") // น้ำหนักคงเหลือ
+  initialWeightKg Float   @map("initial_weight_kg") // น้ำหนักรับเข้า
+  minThresholdKg Float    @default(5.0) @map("min_threshold_kg")
+  pricePerKg     Decimal  @map("price_per_kg") @db.Decimal(10, 2)
+  supplier       String?
+  notes          String?
+  receivedAt     DateTime @map("received_at")
+  expiresAt      DateTime? @map("expires_at")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  roastJobs RoastJob[]
+
+  @@map("inventory_green")
+}
+
+model InventoryRoasted {
+  id           String     @id @default(uuid())
+  productId    String     @map("product_id")
+  batchRef     String     @map("batch_ref")
+  roastJobId   String?    @map("roast_job_id")
+  weightKg     Float      @map("weight_kg") // น้ำหนักคงเหลือ
+  roastDate    DateTime   @map("roast_date")
+  roastLevel   RoastLevel @map("roast_level")
+  degasReadyAt DateTime   @map("degas_ready_at") // วันที่ Degas เสร็จ
+  notes        String?
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+
+  product   Product   @relation(fields: [productId], references: [id])
+  roastJob  RoastJob? @relation(fields: [roastJobId], references: [id])
+  orderItems OrderItem[]
+
+  @@map("inventory_roasted")
+}
+
+// ============================================================
+// MODULE 2: ROASTING JOB ORDER
+// ============================================================
+
+model RoastJob {
+  id              String         @id @default(uuid())
+  jobNumber       String         @unique @map("job_number") // ECR-2026-001
+  greenBeanId     String         @map("green_bean_id")
+  inputWeightKg   Float          @map("input_weight_kg")
+  yieldPercent    Float          @default(85.0) @map("yield_percent") // ตั้งค่าได้
+  expectedOutputKg Float         @map("expected_output_kg") // = input × yield%
+  actualOutputKg   Float?        @map("actual_output_kg")  // บันทึกหลังคั่วจริง
+  actualYieldPercent Float?      @map("actual_yield_percent")
+  targetRoastLevel RoastLevel    @map("target_roast_level")
+  status          RoastJobStatus @default(SCHEDULED)
+  scheduledAt     DateTime       @map("scheduled_at")
+  startedAt       DateTime?      @map("started_at")
+  completedAt     DateTime?      @map("completed_at")
+  notes           String?
+  createdBy       String         @map("created_by") // userId
+  createdAt       DateTime       @default(now()) @map("created_at")
+  updatedAt       DateTime       @updatedAt @map("updated_at")
+
+  greenBean        InventoryGreen    @relation(fields: [greenBeanId], references: [id])
+  inventoryRoasted InventoryRoasted[]
+
+  @@map("roast_jobs")
+}
+
+// ============================================================
+// MODULE 3: ORDERS (STATE MACHINE)
+// ============================================================
+
+model Order {
+  id              String      @id @default(uuid())
+  orderNumber     String      @unique @map("order_number") // ECR-ORD-20260415-001
+  userId          String      @map("user_id")
+  addressId       String?     @map("address_id")
+  status          OrderStatus @default(PENDING_PAYMENT)
+  subtotal        Decimal     @db.Decimal(10, 2)
+  shippingFee     Decimal     @default(0) @map("shipping_fee") @db.Decimal(10, 2)
+  discount        Decimal     @default(0) @db.Decimal(10, 2)
+  totalAmount     Decimal     @map("total_amount") @db.Decimal(10, 2)
+  isWholesale     Boolean     @default(false) @map("is_wholesale")
+  notes           String?
+
+  // Payment
+  paymentMethod   PaymentMethod? @map("payment_method")
+  gbpayRef        String?     @map("gbpay_ref")
+  gbpayQrData     String?     @map("gbpay_qr_data") // QR payload
+  paidAt          DateTime?   @map("paid_at")
+  paidAmount      Decimal?    @map("paid_amount") @db.Decimal(10, 2)
+
+  // Logistics
+  logisticsProvider LogisticsProvider? @map("logistics_provider")
+  trackingNo      String?     @map("tracking_no")
+  shippedAt       DateTime?   @map("shipped_at")
+  deliveredAt     DateTime?   @map("delivered_at")
+  flashAwbUrl     String?     @map("flash_awb_url") // Airway Bill PDF URL
+
+  // Documents
+  receiptUrl      String?     @map("receipt_url")
+  quotationUrl    String?     @map("quotation_url")
+  labelUrl        String?     @map("label_url")
+
+  createdAt       DateTime    @default(now()) @map("created_at")
+  updatedAt       DateTime    @updatedAt @map("updated_at")
+
+  user      User        @relation(fields: [userId], references: [id])
+  address   Address?    @relation(fields: [addressId], references: [id])
+  items     OrderItem[]
+  statusLogs OrderStatusLog[]
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id                 String    @id @default(uuid())
+  orderId            String    @map("order_id")
+  productId          String    @map("product_id")
+  inventoryRoastedId String?   @map("inventory_roasted_id") // ตัดจาก batch ไหน (FIFO)
+  quantity           Int
+  weightGram         Int       @map("weight_gram")
+  unitPrice          Decimal   @map("unit_price") @db.Decimal(10, 2)
+  totalPrice         Decimal   @map("total_price") @db.Decimal(10, 2)
+
+  order            Order             @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product          Product           @relation(fields: [productId], references: [id])
+  inventoryRoasted InventoryRoasted? @relation(fields: [inventoryRoastedId], references: [id])
+
+  @@map("order_items")
+}
+
+model OrderStatusLog {
+  id        String      @id @default(uuid())
+  orderId   String      @map("order_id")
+  fromStatus OrderStatus? @map("from_status")
+  toStatus  OrderStatus @map("to_status")
+  note      String?
+  actorId   String?     @map("actor_id") // userId หรือ "system"
+  createdAt DateTime    @default(now()) @map("created_at")
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@map("order_status_logs")
+}
+
+// ============================================================
+// MODULE 5: SMART FEATURES
+// ============================================================
+
+model Review {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  productId String   @map("product_id")
+  orderId   String?  @map("order_id")
+  rating    Int      // 1-5
+  comment   String?
+  source    String   @default("web") // "web" | "qr" | "liff"
+  isApproved Boolean @default(false) @map("is_approved")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user    User    @relation(fields: [userId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
+
+  @@map("reviews")
+}
+
+// ============================================================
+// MODULE 6: IoT INFRASTRUCTURE (STUBBED — Phase 2)
+// ============================================================
+
+model IoTDevice {
+  id          String    @id @default(uuid())
+  name        String
+  location    String    // "storage_room" | "roast_floor" | "green_warehouse"
+  type        String    // "scale" | "thermometer" | "hygrometer"
+  macAddress  String?   @unique @map("mac_address")
+  apiKeyHash  String?   @map("api_key_hash") // hashed API key สำหรับ device auth
+  isActive    Boolean   @default(true) @map("is_active")
+  lastSeenAt  DateTime? @map("last_seen_at")
+  metadata    Json?     // flexible device config
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  readings SensorReading[]
+
+  @@map("iot_devices")
+}
+
+model SensorReading {
+  id         String    @id @default(uuid())
+  deviceId   String    @map("device_id")
+  sensorType String    @map("sensor_type") // "weight_kg" | "temperature_c" | "humidity_percent"
+  value      Float
+  unit       String
+  metadata   Json?     // เช่น { "inventory_id": "...", "job_id": "..." }
+  recordedAt DateTime  @map("recorded_at")
+  createdAt  DateTime  @default(now()) @map("created_at")
+
+  device IoTDevice @relation(fields: [deviceId], references: [id])
+
+  @@index([deviceId, sensorType, recordedAt])
+  @@map("sensor_readings")
+}
+
+// System config (roast yield defaults, degas days, notification thresholds)
+model SystemConfig {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  value     Json
+  updatedAt DateTime @updatedAt @map("updated_at")
+  updatedBy String?  @map("updated_by")
+
+  @@map("system_config")
+}

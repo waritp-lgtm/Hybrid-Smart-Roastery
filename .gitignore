@@ -1,0 +1,43 @@
+# ── Dependencies ─────────────────────────────────────
+node_modules/
+.npm
+.pnp
+.pnp.js
+
+# ── Build outputs ─────────────────────────────────────
+dist/
+build/
+.next/
+out/
+
+# ── Environment (NEVER commit!) ───────────────────────
+.env
+.env.local
+.env.production
+.env.staging
+
+# ── Prisma client (generated) ─────────────────────────
+packages/prisma/node_modules/
+
+# ── Logs ──────────────────────────────────────────────
+*.log
+npm-debug.log*
+logs/
+
+# ── OS files ──────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ── IDE ───────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ── Docker local volumes ──────────────────────────────
+docker/media/
+docker/backups/
+
+# ── Testing ───────────────────────────────────────────
+coverage/
+.nyc_output/
