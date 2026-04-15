@@ -1,0 +1,103 @@
+{
+  "nav": {
+    "home": "Home",
+    "products": "Products",
+    "about": "About",
+    "cart": "Cart",
+    "profile": "Account",
+    "login": "Login",
+    "logout": "Logout",
+    "b2b": "For Coffee Shops"
+  },
+  "home": {
+    "hero_title": "Eight Coffee Roasters",
+    "hero_subtitle": "Fresh-roasted every batch, delivered to your door",
+    "cta_shop": "Shop Now",
+    "cta_b2b": "Wholesale Pricing",
+    "featured_title": "Featured Coffees"
+  },
+  "product": {
+    "origin": "Origin",
+    "process": "Process",
+    "roast_level": "Roast Level",
+    "flavor_notes": "Flavor Notes",
+    "brew_guide": "Brew Guide",
+    "add_to_cart": "Add to Cart",
+    "in_stock": "In Stock",
+    "out_of_stock": "Out of Stock",
+    "degas_ready": "Ready to Brew",
+    "degas_remaining": "{days} days until peak flavor",
+    "weight": "Weight",
+    "price": "Price",
+    "retail_price": "Retail Price",
+    "wholesale_price": "Wholesale Price"
+  },
+  "flavor": {
+    "beginner_mode": "Beginner Mode",
+    "pro_mode": "Pro Mode",
+    "sweet": "Sweetness",
+    "sour": "Acidity",
+    "body": "Body",
+    "aroma": "Aroma",
+    "bitter": "Bitterness",
+    "sommelier_placeholder": "e.g. floral, not too sour, good for pour over..."
+  },
+  "cart": {
+    "title": "Shopping Cart",
+    "empty": "Your cart is empty",
+    "subtotal": "Subtotal",
+    "shipping": "Shipping",
+    "total": "Total",
+    "checkout": "Checkout",
+    "continue_shopping": "Continue Shopping"
+  },
+  "checkout": {
+    "title": "Checkout",
+    "qr_prompt": "Scan QR Code to pay",
+    "qr_expires": "QR expires in {minutes} minutes",
+    "waiting": "Waiting for payment confirmation...",
+    "success": "Payment Successful!",
+    "shipping_address": "Shipping Address"
+  },
+  "order": {
+    "number": "Order Number",
+    "status": "Status",
+    "tracking": "Track Package",
+    "PENDING_PAYMENT": "Awaiting Payment",
+    "PAID": "Paid",
+    "ROASTING": "Roasting",
+    "READY_TO_SHIP": "Ready to Ship",
+    "SHIPPED": "Shipped",
+    "DELIVERED": "Delivered",
+    "CANCELLED": "Cancelled"
+  },
+  "b2b": {
+    "title": "Coffee Shop Portal",
+    "subtitle": "Login to access wholesale pricing",
+    "reorder": "Reorder Same Lot",
+    "cost_calculator": "Cost Per Cup Calculator",
+    "dose_label": "Dose (grams/cup)",
+    "cost_per_cup": "Cost per Cup"
+  },
+  "brew_guide": {
+    "scan_title": "Roaster's Brew Guide",
+    "method": "Method",
+    "ratio": "Ratio",
+    "temperature": "Water Temp",
+    "grind": "Grind Size",
+    "time": "Brew Time",
+    "rate_title": "Rate This Coffee",
+    "rate_submit": "Submit Review"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Something went wrong",
+    "retry": "Try Again",
+    "save": "Save",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "baht": "THB",
+    "kg": "kg",
+    "gram": "g"
+  }
+}

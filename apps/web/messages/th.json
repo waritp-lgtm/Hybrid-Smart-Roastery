@@ -1,0 +1,103 @@
+{
+  "nav": {
+    "home": "หน้าแรก",
+    "products": "สินค้า",
+    "about": "เกี่ยวกับเรา",
+    "cart": "ตะกร้า",
+    "profile": "บัญชี",
+    "login": "เข้าสู่ระบบ",
+    "logout": "ออกจากระบบ",
+    "b2b": "สำหรับร้านกาแฟ"
+  },
+  "home": {
+    "hero_title": "Eight Coffee Roasters",
+    "hero_subtitle": "คั่วสดทุกล็อต ส่งตรงถึงมือคุณ",
+    "cta_shop": "เลือกซื้อกาแฟ",
+    "cta_b2b": "ราคาส่งสำหรับร้านกาแฟ",
+    "featured_title": "กาแฟแนะนำ"
+  },
+  "product": {
+    "origin": "แหล่งผลิต",
+    "process": "กระบวนการ",
+    "roast_level": "ระดับการคั่ว",
+    "flavor_notes": "รสชาติ",
+    "brew_guide": "วิธีชง",
+    "add_to_cart": "เพิ่มในตะกร้า",
+    "in_stock": "มีสินค้า",
+    "out_of_stock": "สินค้าหมด",
+    "degas_ready": "พร้อมชงแล้ว",
+    "degas_remaining": "อีก {days} วันพร้อมชง",
+    "weight": "น้ำหนัก",
+    "price": "ราคา",
+    "retail_price": "ราคาปลีก",
+    "wholesale_price": "ราคาส่ง"
+  },
+  "flavor": {
+    "beginner_mode": "โหมดผู้เริ่มต้น",
+    "pro_mode": "โหมดผู้เชี่ยวชาญ",
+    "sweet": "ความหวาน",
+    "sour": "ความเปรี้ยว",
+    "body": "บอดี้",
+    "aroma": "กลิ่นหอม",
+    "bitter": "ความขม",
+    "sommelier_placeholder": "เช่น หอมดอกไม้ ไม่เปรี้ยว เหมาะดริป..."
+  },
+  "cart": {
+    "title": "ตะกร้าสินค้า",
+    "empty": "ตะกร้าว่างเปล่า",
+    "subtotal": "ยอดรวม",
+    "shipping": "ค่าส่ง",
+    "total": "ยอดชำระ",
+    "checkout": "ชำระเงิน",
+    "continue_shopping": "เลือกสินค้าต่อ"
+  },
+  "checkout": {
+    "title": "ชำระเงิน",
+    "qr_prompt": "สแกน QR Code เพื่อชำระเงิน",
+    "qr_expires": "QR หมดอายุใน {minutes} นาที",
+    "waiting": "รอการยืนยันการชำระเงิน...",
+    "success": "ชำระเงินสำเร็จ!",
+    "shipping_address": "ที่อยู่จัดส่ง"
+  },
+  "order": {
+    "number": "เลขที่คำสั่งซื้อ",
+    "status": "สถานะ",
+    "tracking": "ติดตามพัสดุ",
+    "PENDING_PAYMENT": "รอชำระเงิน",
+    "PAID": "ชำระเงินแล้ว",
+    "ROASTING": "กำลังคั่ว",
+    "READY_TO_SHIP": "พร้อมจัดส่ง",
+    "SHIPPED": "จัดส่งแล้ว",
+    "DELIVERED": "ส่งถึงแล้ว",
+    "CANCELLED": "ยกเลิก"
+  },
+  "b2b": {
+    "title": "พอร์ทัลสำหรับร้านกาแฟ",
+    "subtitle": "ล็อกอินเพื่อดูราคาพิเศษสำหรับร้านกาแฟ",
+    "reorder": "สั่งซ้ำล็อตเดิม",
+    "cost_calculator": "คำนวณต้นทุนต่อแก้ว",
+    "dose_label": "Dose (กรัม/แก้ว)",
+    "cost_per_cup": "ต้นทุน/แก้ว"
+  },
+  "brew_guide": {
+    "scan_title": "Roaster's Brew Guide",
+    "method": "วิธีชง",
+    "ratio": "อัตราส่วน",
+    "temperature": "อุณหภูมิน้ำ",
+    "grind": "การบด",
+    "time": "เวลาชง",
+    "rate_title": "ให้คะแนนรสชาติ",
+    "rate_submit": "ส่งความคิดเห็น"
+  },
+  "common": {
+    "loading": "กำลังโหลด...",
+    "error": "เกิดข้อผิดพลาด",
+    "retry": "ลองใหม่",
+    "save": "บันทึก",
+    "cancel": "ยกเลิก",
+    "confirm": "ยืนยัน",
+    "baht": "บาท",
+    "kg": "กก.",
+    "gram": "กรัม"
+  }
+}
